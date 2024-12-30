@@ -12,7 +12,7 @@ import * as jwt from 'jsonwebtoken';
 export class UsersService {
   // Hard-coded secret for demo; in production, use process.env.JWT_SECRET
   private readonly JWT_SECRET = 'MY_SUPER_SECRET';
-  private readonly EXPIRES_IN = '1d';
+  private readonly EXPIRES_IN = '5m';
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<User>
