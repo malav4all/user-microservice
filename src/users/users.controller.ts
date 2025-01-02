@@ -35,7 +35,7 @@ export class UsersController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateDto: { name?: string; email?: string; age?: number },
+    @Body() updateDto: { name?: string; email?: string; age?: number }
   ) {
     return this.usersService.updateUser(id, updateDto);
   }
@@ -51,7 +51,7 @@ export class UsersController {
     // Validate user (check DB)
     const user = await this.usersService.validateUser(
       creds.username,
-      creds.password,
+      creds.password
     );
     // Generate JWT
     const token = await this.usersService.generateToken(user);
