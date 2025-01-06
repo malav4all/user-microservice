@@ -3,11 +3,14 @@ import {
   Get,
   Post,
   Body,
+  ValidationPipe,
+  UsePipes,
   Param,
-  Patch,
-  Delete,
+  Put,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { User } from './users.schema';
 
 @Controller('users')
 export class UsersController {
@@ -15,8 +18,10 @@ export class UsersController {
 
   // CREATE
   @Post()
-  async create(@Body() body: { name: string; email: string; age: number }) {
-    return this.usersService.createUser(body);
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async create(@Body() createUserDto: CreateUserDto): Promise<User> {
+    const user = await this.usersService.createUser(createUserDto);
+    return user;
   }
 
   // READ ALL
@@ -25,36 +30,33 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  // READ ONE
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.usersService.findById(id);
-  }
-
-  // UPDATE
-  @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body() updateDto: { name?: string; email?: string; age?: number }
-  ) {
-    return this.usersService.updateUser(id, updateDto);
-  }
-
-  // DELETE
-  @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return this.usersService.deleteUser(id);
-  }
-
   @Post('login')
-  async login(@Body() creds: { username: string; password: string }) {
+  async login(@Body() creds: { email: string; password: string }) {
     // Validate user (check DB)
     const user = await this.usersService.validateUser(
-      creds.username,
+      creds.email,
       creds.password
     );
     // Generate JWT
     const token = await this.usersService.generateToken(user);
     return { accessToken: token };
+  }
+
+  @Get('find-by-api-key/:apiKey')
+  async findByApiKey(@Param('apiKey') apiKey: string) {
+    const user = await this.usersService.findApiKey(apiKey);
+    return user;
+  }
+
+  @Put('update-usage/:id')
+  async updateUserUsage(
+    @Param('id') id: string,
+    @Body()
+    data: {
+      usageCounters: Record<string, number>;
+      permissionMatrix?: Record<string, any>; // Optional permissionMatrix updates
+    }
+  ) {
+    return this.usersService.updateUserUsage(id, data);
   }
 }
