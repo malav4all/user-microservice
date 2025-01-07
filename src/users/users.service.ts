@@ -10,6 +10,7 @@ import { User } from './users.schema';
 import * as jwt from 'jsonwebtoken';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,7 @@ export class UsersService {
     @InjectModel(User.name)
     private readonly userModel: Model<User>
   ) {}
+
   async createUser(dto: CreateUserDto): Promise<User> {
     // Ensure email is unique
     const existing = await this.userModel.findOne({ email: dto.email }).exec();
@@ -39,10 +41,14 @@ export class UsersService {
       apiKeyExpiresAt = new Date(dto.apiKeyExpiresAt);
     }
 
+    // Hash the password
+    const saltRounds = 10; // Adjust the cost factor based on security requirements
+    const hashedPassword = await bcrypt.hash(dto.password, saltRounds);
+
     const user = new this.userModel({
       name: dto.name,
       email: dto.email,
-      password: dto.password,
+      password: hashedPassword, // Store the hashed password
       apiKey,
       apiKeyExpiresAt,
       roles: dto.roles || [],
@@ -55,8 +61,8 @@ export class UsersService {
 
   // Generate a random API key
   private generateApiKey(): string {
-    const rand = crypto.randomBytes(8).toString('hex').toUpperCase();
-    return `KEY_${rand}`;
+    const rand = crypto.randomBytes(20).toString('hex').toUpperCase();
+    return `${rand}`;
   }
 
   /**
